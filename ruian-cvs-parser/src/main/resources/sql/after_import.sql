@@ -19,54 +19,41 @@ create index vh_ruian_cobce_idx3 on vh_ruian_cobce(obecmomc_nazev);
 
 
 create table vh_ruian_sobec as
-select o.obec_kod, null as cobce_kod, o.obec_nazev as sobec_nazev, 'okres: '||o.okres_nazev as sobec_desc from vh_ruian_cobce o
+--obec s okresem (pokud jich je vic se stejnym nazvem)
+select o.obec_kod, o.obec_nazev as sobec_nazev, 'okres: '||o.okres_nazev as locality_desc, 1 as locality_level from vh_ruian_cobce o
 where exists (select 1 from vh_ruian_cobce o2 where (o.obec_nazev=o2.obec_nazev or o.obec_nazev=o2.cobce_nazev or o.obec_nazev=o2.obecmomc_nazev) and o.obec_kod!=o2.obec_kod)
 union
-select o.obec_kod, null as cobce_kod, o.obec_nazev as sobec_nazev, '' as sobec_desc from vh_ruian_cobce o
+select o.obec_kod, o.obec_nazev as sobec_nazev, '' as locality_desc, 1 as locality_level from vh_ruian_cobce o
 where not exists (select 1 from vh_ruian_cobce o2 where (o.obec_nazev=o2.obec_nazev or o.obec_nazev=o2.cobce_nazev or o.obec_nazev=o2.obecmomc_nazev) and o.obec_kod!=o2.obec_kod)
 --praha
-/*
 union
-select o.obec_kod, null as cobce_kod, o.obecmop_nazev as sobec_nazev, '' as sobec_desc from vh_ruian_cobce o
-where o.obecmop_nazev is not null 
-  and o.obecmomc_nazev!=o.obecmop_nazev 
-union
---praha
-union
-select o.obec_kod, null as cobce_kod, o.obecmomc_nazev as sobec_nazev, '' as sobec_desc from vh_ruian_cobce o
-where o.obecmomc_nazev is not null
-  and o.obec_kod=554782
-  and o.obecmomc_nazev like 'Praha %'
-*/
---praha
-union
-select o.obec_kod, null as cobce_kod, substr(o.obecmomc_nazev,7) as sobec_nazev, 'Praha' as sobec_desc from vh_ruian_cobce o
+select o.obec_kod, substr(o.obecmomc_nazev,7) as sobec_nazev, 'Praha' as locality_desc, 2 as locality_level from vh_ruian_cobce o
 where o.obecmomc_nazev is not null
   and o.obec_kod=554782
   and o.obecmomc_nazev like 'Praha-%'
 --obce v praze
 union
-select o.obec_kod, null cobce_kod, o.cobce_nazev as sobec_nazev, 'Praha' as sobec_desc from vh_ruian_cobce o
+select o.obec_kod, o.cobce_nazev as sobec_nazev, 'Praha' as locality_desc, 2 as locality_level from vh_ruian_cobce o
 where o.cobce_nazev!=o.obec_nazev 
   and o.cobce_nazev is not null
   and o.obec_kod=554782
 --obce v praze
 union
-select o.obec_kod, null cobce_kod, substr(o.obecmomc_nazev,7) as sobec_nazev, 'Praha' as sobec_desc from vh_ruian_cobce o
+select o.obec_kod, substr(o.obecmomc_nazev,7) as sobec_nazev, 'Praha' as locality_desc, 2 as locality_level from vh_ruian_cobce o
 where o.obecmomc_nazev!=o.obec_nazev 
   and o.obecmomc_nazev is not null
   and o.obecmomc_nazev like 'Praha-%'
   and o.obec_kod=554782
 --obce mimo prahu
 union
-select o.obec_kod, o.cobce_kod, o.cobce_nazev as sobec_nazev, o.obec_nazev as sobec_desc from vh_ruian_cobce o
+select o.obec_kod, o.cobce_nazev as sobec_nazev, o.obec_nazev as locality_desc, 3 as locality_level from vh_ruian_cobce o
 where o.cobce_nazev!=o.obec_nazev 
   and o.cobce_nazev is not null
   and o.cobce_nazev!='Město'
   and o.obec_kod!=554782
 --obce mimo prahu
 union
-select o.obec_kod, null cobce_kod, o.obecmomc_nazev as sobec_nazev, o.obec_nazev as sobec_desc from vh_ruian_cobce o
+select o.obec_kod, o.obecmomc_nazev as sobec_nazev, o.obec_nazev as locality_desc, 4 as locality_level from vh_ruian_cobce o
 where o.obecmomc_nazev!=o.obec_nazev 
   and o.obecmomc_nazev is not null
   and o.obecmomc_nazev!='Město'
